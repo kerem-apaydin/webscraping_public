@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Ürün Listesi{% endblock %}
+{% block content %}
+<div class="container">
+    <h1>Ürün Listesi</h1>
+    <div class="row mb-3">
+        <div class="col">
+            <form method="GET" action="{{ url_for('views.home') }}">
+                <div class="input-group">
+                    <select name="brand" class="form-select">
+                        <option value="">Tüm Ürünler</option>
+                        {% for b in brands %}
+                            <option value="{{ b }}" {% if b == brand %}selected{% endif %}>{{ b }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="text" name="search" class="form-control" value="{{ search }}" placeholder="Ürün ara...">
+                    <select name="per_page" class="form-select">
+                        <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+                        <option value="20" {% if per_page == 20 %}selected{% endif %}>20</option>
+                        <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary">Filtrele</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <div class="col">
+            <form method="POST" action="{{ url_for('views.home') }}">
+                <div class="input-group">
+                    <input type="text" name="scrape_url" class="form-control" placeholder="Ürün URL'si girin">
+                    <button type="submit" class="btn btn-success">Ürünleri Çek</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Resim</th>
+                <th>Başlık</th>
+                <th>Marka</th>
+                <th>Fiyat</th>
+                <th>Ürün Kodu</th>
+                <th>Detay</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products.items %}
+                <tr>
+                    <td><img src="{{ product.image }}" alt="{{ product.title }}" width="50"></td>
+                    <td>{{ product.title }}</td>
+                    <td>{{ product.brand }}</td>
+                    <td>{{ product.current_price }}</td>
+                    <td>{{ product.product_code }}</td>
+                    <td><a href="{{ url_for('views.product_detail', id=product.id) }}">Detay</a></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% include 'pagination.html' %}
+</div>
+{% endblock %}

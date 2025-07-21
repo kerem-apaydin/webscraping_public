@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}{{ product.title }}{% endblock %}
+{% block content %}
+<div class="container">
+    <h1>{{ product.title }}</h1>
+    <div class="row">
+        <div class="col-md-6">
+            <img src="{{ product.image }}" alt="{{ product.title }}" class="img-fluid">
+        </div>
+        <div class="col-md-6">
+            <p><strong>Marka:</strong> {{ product.brand }}</p>
+            <p><strong>Fiyat:</strong> {{ product.current_price }}</p>
+            <p><strong>Ürün Kodu:</strong> {{ product.product_code }}</p>
+            <p><strong>Link:</strong> <a href="{{ product.link }}" target="_blank">Ürüne Git</a></p>
+            <p><a href="{{ url_for('views.home') }}" class="btn btn-secondary">Geri Dön</a></p>
+        </div>
+    </div>
+    <h2>Fiyat Geçmişi</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Fiyat</th>
+                <th>Tarih</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for price in price_history %}
+                <tr>
+                    <td>{{ price.price }}</td>
+                    <td>{{ price.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

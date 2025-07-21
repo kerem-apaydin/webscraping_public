@@ -1,0 +1,76 @@
+2025-07-17 13:02:58,823 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-07-17 13:02:58,824 - INFO - [33mPress CTRL+C to quit[0m
+2025-07-17 13:02:58,825 - INFO -  * Restarting with stat
+2025-07-17 13:03:00,044 - WARNING -  * Debugger is active!
+2025-07-17 13:03:00,047 - INFO -  * Debugger PIN: 101-852-157
+2025-07-17 13:03:40,707 - INFO - 127.0.0.1 - - [17/Jul/2025 13:03:40] "GET /?product_id=5 HTTP/1.1" 200 -
+2025-07-17 13:03:44,568 - INFO - 127.0.0.1 - - [17/Jul/2025 13:03:44] "GET / HTTP/1.1" 200 -
+2025-07-17 13:03:48,619 - INFO - ====== WebDriver manager ======
+2025-07-17 13:03:49,432 - INFO - Get LATEST chromedriver version for google-chrome
+2025-07-17 13:03:49,807 - INFO - Get LATEST chromedriver version for google-chrome
+2025-07-17 13:03:50,122 - INFO - Driver [C:\Users\Kerem\.wdm\drivers\chromedriver\win64\138.0.7204.157\chromedriver-win32/chromedriver.exe] found in cache
+2025-07-17 13:03:53,026 - INFO - Scraping page 1...
+2025-07-17 13:03:54,086 - INFO - Found 12 products on page 1.
+2025-07-17 13:03:57,487 - INFO - Scraping page 2...
+2025-07-17 13:03:58,550 - INFO - Found 12 products on page 2.
+2025-07-17 13:04:02,162 - INFO - Scraping page 3...
+2025-07-17 13:04:03,277 - INFO - Found 12 products on page 3.
+2025-07-17 13:04:06,654 - INFO - Scraping page 4...
+2025-07-17 13:04:06,923 - INFO - Found 3 products on page 4.
+2025-07-17 13:04:07,001 - INFO - No next page found, stopping.
+2025-07-17 13:04:10,039 - INFO - Saved 39 products to products.json.
+2025-07-17 13:04:10,069 - INFO - Saved 39 products to database.
+2025-07-17 13:04:14,156 - INFO - 127.0.0.1 - - [17/Jul/2025 13:04:14] "[32mPOST / HTTP/1.1[0m" 302 -
+2025-07-17 13:04:14,172 - INFO - 127.0.0.1 - - [17/Jul/2025 13:04:14] "GET / HTTP/1.1" 200 -
+2025-07-17 13:04:42,129 - INFO - 127.0.0.1 - - [17/Jul/2025 13:04:42] "GET /?page=2&search=&brand= HTTP/1.1" 200 -
+2025-07-17 13:04:50,649 - INFO - 127.0.0.1 - - [17/Jul/2025 13:04:50] "GET /?search=&brand=DELL HTTP/1.1" 200 -
+2025-07-17 13:06:28,528 - INFO - 127.0.0.1 - - [17/Jul/2025 13:06:28] "GET /product/1 HTTP/1.1" 200 -
+2025-07-17 13:06:34,622 - INFO - 127.0.0.1 - - [17/Jul/2025 13:06:34] "GET / HTTP/1.1" 200 -
+2025-07-21 10:20:01,859 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.2.135:5000
+2025-07-21 10:20:01,859 - INFO - [33mPress CTRL+C to quit[0m
+2025-07-21 10:20:01,861 - INFO -  * Restarting with stat
+2025-07-21 10:20:02,933 - WARNING -  * Debugger is active!
+2025-07-21 10:20:02,937 - INFO -  * Debugger PIN: 726-876-880
+2025-07-21 10:20:07,566 - INFO - 127.0.0.1 - - [21/Jul/2025 10:20:07] "GET / HTTP/1.1" 200 -
+2025-07-21 10:20:26,222 - INFO - 127.0.0.1 - - [21/Jul/2025 10:20:26] "GET / HTTP/1.1" 200 -
+2025-07-21 10:20:39,018 - INFO - 127.0.0.1 - - [21/Jul/2025 10:20:39] "GET / HTTP/1.1" 200 -
+2025-07-21 10:22:48,540 - INFO - 192.168.2.154 - - [21/Jul/2025 10:22:48] "GET / HTTP/1.1" 200 -
+2025-07-21 10:22:49,172 - INFO - 192.168.2.154 - - [21/Jul/2025 10:22:49] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-07-21 10:23:24,515 - INFO - 192.168.2.149 - - [21/Jul/2025 10:23:24] "GET / HTTP/1.1" 200 -
+2025-07-21 10:23:25,239 - INFO - 192.168.2.149 - - [21/Jul/2025 10:23:25] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-07-21 10:23:25,254 - INFO - 192.168.2.149 - - [21/Jul/2025 10:23:25] "[33mGET /apple-touch-icon-precomposed.png HTTP/1.1[0m" 404 -
+2025-07-21 10:23:25,367 - INFO - 192.168.2.149 - - [21/Jul/2025 10:23:25] "[33mGET /apple-touch-icon.png HTTP/1.1[0m" 404 -
+2025-07-21 10:24:02,932 - INFO - ====== WebDriver manager ======
+2025-07-21 10:24:03,717 - INFO - Get LATEST chromedriver version for google-chrome
+2025-07-21 10:24:03,929 - INFO - Get LATEST chromedriver version for google-chrome
+2025-07-21 10:24:04,140 - INFO - Driver [C:\Users\Kerem\.wdm\drivers\chromedriver\win64\138.0.7204.157\chromedriver-win32/chromedriver.exe] found in cache
+2025-07-21 10:24:08,533 - INFO - Scraping page 1...
+2025-07-21 10:24:09,605 - INFO - Found 12 products on page 1.
+2025-07-21 10:24:13,016 - INFO - Scraping page 2...
+2025-07-21 10:24:14,093 - INFO - Found 12 products on page 2.
+2025-07-21 10:24:17,684 - INFO - Scraping page 3...
+2025-07-21 10:24:18,828 - INFO - Found 12 products on page 3.
+2025-07-21 10:24:23,334 - INFO - Scraping page 4...
+2025-07-21 10:24:24,409 - INFO - Found 12 products on page 4.
+2025-07-21 10:24:31,001 - INFO - Scraping page 5...
+2025-07-21 10:24:32,061 - INFO - Found 12 products on page 5.
+2025-07-21 10:24:36,658 - INFO - Scraping page 6...
+2025-07-21 10:24:37,754 - INFO - Found 12 products on page 6.
+2025-07-21 10:24:41,626 - INFO - Scraping page 7...
+2025-07-21 10:24:42,762 - INFO - Found 12 products on page 7.
+2025-07-21 10:24:46,680 - INFO - Scraping page 8...
+2025-07-21 10:24:47,815 - INFO - Found 12 products on page 8.
+2025-07-21 10:24:51,578 - INFO - Scraping page 9...
+2025-07-21 10:24:52,655 - INFO - Found 12 products on page 9.
+2025-07-21 10:24:52,736 - INFO - No next page found, stopping.
+2025-07-21 10:24:55,324 - INFO - Saved 108 products to products.json.
+2025-07-21 10:24:55,381 - INFO - Saved 108 products to database.
+2025-07-21 10:24:59,462 - INFO - 192.168.2.149 - - [21/Jul/2025 10:24:59] "[32mPOST / HTTP/1.1[0m" 302 -
+2025-07-21 10:24:59,516 - INFO - 192.168.2.149 - - [21/Jul/2025 10:24:59] "GET / HTTP/1.1" 200 -
+2025-07-21 10:25:39,985 - INFO - 192.168.2.149 - - [21/Jul/2025 10:25:39] "GET /?page=15&search=&brand= HTTP/1.1" 200 -
+2025-07-21 10:33:26,826 - INFO -  * Detected change in 'C:\\Users\\Kerem\\Desktop\\active\\webscraper\\app\\scraper.py', reloading
+2025-07-21 10:33:26,916 - INFO -  * Restarting with stat
