@@ -38,11 +38,12 @@ def create_app():
         scheduler = BackgroundScheduler()
         from .scraper import update_product_price
         def safe_update_product_price():
-            try:
-                update_product_price()
-                logging.info("Price update completed successfully.", extra={'product': '', 'link': ''})
-            except Exception as e:
-                logging.error(f"Error during price update: {str(e)}", extra={'product': '', 'link': ''})
+            with app.app_context():  # Add application context
+                try:
+                    update_product_price()
+                    logging.info("Price update completed successfully.", extra={'product': '', 'link': ''})
+                except Exception as e:
+                    logging.error(f"Error during price update: {str(e)}", extra={'product': '', 'link': ''})
 
         scheduler.add_job(
             func=safe_update_product_price,

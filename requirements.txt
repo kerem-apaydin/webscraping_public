@@ -1,8 +1,7 @@
-flask==2.3.3
-werkzeug==2.3.8
-flask-sqlalchemy==3.0.5
-apscheduler==3.10.4
-selenium==4.15.2
-webdriver-manager==4.0.1
-tenacity==8.2.3
-flask-caching==2.0.2
+flask>=2.0.0
+flask-sqlalchemy>=3.0.0
+flask-caching>=2.0.0
+apscheduler>=3.10.0
+selenium>=4.11.2
+webdriver_manager>=4.0.2
+tenacity>=8.0.0

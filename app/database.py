@@ -1,5 +1,5 @@
 from . import db
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy import Numeric
 
 class ScrapedData(db.Model):

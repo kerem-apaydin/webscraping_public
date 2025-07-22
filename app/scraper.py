@@ -4,25 +4,32 @@ import os
 import logging
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException, TimeoutException
-from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.firefox import GeckoDriverManager
 from .database import ScrapedData, PriceHistory
 from . import db
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 from tenacity import retry, stop_after_attempt, wait_fixed
 import gzip
+import re
 
+# Configure logging
 logging.basicConfig(
     filename="scraper.log",
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s - [Product: %(product)s, Link: %(link)s]",
     encoding="utf-8"
 )
+
+# Initialize global driver (used as fallback)
+driver_path = GeckoDriverManager().install()
+service = Service(driver_path)
+driver = webdriver.Firefox(service=service)
 
 class Product:
     def __init__(self, title, price, link, image, brand, product_code, prev_price=None):
@@ -51,12 +58,10 @@ class ProductScraper:
         if driver is None:
             options = Options()
             options.add_argument("--headless")
-            options.add_argument("--disable-gpu")
-            options.add_argument("--no-sandbox")
             options.add_argument("--disable-notifications")
             options.add_argument("--log-level=3")
-            service = Service(ChromeDriverManager().install())
-            self.driver = webdriver.Chrome(service=service, options=options)
+            service = Service(GeckoDriverManager().install())
+            self.driver = webdriver.Firefox(service=service, options=options)
         else:
             self.driver = driver
         self.wait = WebDriverWait(self.driver, 10)
@@ -114,7 +119,7 @@ class ProductScraper:
             for el in product_elements:
                 try:
                     title_el = el.find_element(By.CLASS_NAME, "title").find_element(By.TAG_NAME, "a")
-                    title = title_el.text.strip()
+                    title = title_el.text.strip() or "Unknown"
                     link = title_el.get_attribute("href")
                     
                     if link in self.seen_links:
@@ -123,12 +128,26 @@ class ProductScraper:
 
                     image_el = el.find_element(By.CLASS_NAME, "image").find_element(By.TAG_NAME, "img")
                     image = image_el.get_attribute("src") or "/static/images/no-image.jpg"
-                    price = el.find_element(By.CLASS_NAME, "price-current").text.strip()
+                    
+                    # Handle price extraction with validation
+                    try:
+                        price_text = el.find_element(By.CLASS_NAME, "price-current").text.strip()
+                        logging.info(f"Raw price text: {price_text}", extra={'product': title, 'link': link})
+                        price_clean = re.sub(r'[^\d.]', '', price_text)
+                        price = float(price_clean) if price_clean else None
+                    except (NoSuchElementException, ValueError):
+                        logging.warning(f"Invalid or missing price for product: {title}", extra={'product': title, 'link': link})
+                        price = None
+                    
                     brand_el = el.find_element(By.CLASS_NAME, "brand")
                     brand_text = brand_el.text.split()
                     brand = brand_text[0] if brand_text else "Unknown"
                     product_code = brand_el.find_element(By.TAG_NAME, "span").text.strip() if brand_el.find_elements(By.TAG_NAME, "span") else "-"
-                    products.append(Product(title, price, link, image, brand, product_code))
+                    
+                    if price is not None:
+                        products.append(Product(title, price, link, image, brand, product_code))
+                    else:
+                        logging.warning(f"Skipping product due to invalid price.", extra={'product': title, 'link': link})
                 except NoSuchElementException:
                     logging.warning(f"Skipping product due to missing elements.", extra={'product': title if 'title' in locals() else '', 'link': link if 'link' in locals() else ''})
                     continue
@@ -143,12 +162,10 @@ class ProductPriceUpdater:
         if driver is None:
             options = Options()
             options.add_argument("--headless")
-            options.add_argument("--disable gpus")
-            options.add_argument("--no-sandbox")
             options.add_argument("--disable-notifications")
             options.add_argument("--log-level=3")
-            service = Service(ChromeDriverManager().install())
-            self.driver = webdriver.Chrome(service=service, options=options)
+            service = Service(GeckoDriverManager().install())
+            self.driver = webdriver.Firefox(service=service, options=options)
         else:
             self.driver = driver
         self.link = self.product.link
@@ -161,11 +178,14 @@ class ProductPriceUpdater:
             price_element = self.wait.until(
                 EC.presence_of_element_located((By.CLASS_NAME, "price-prev"))
             )
-            current_price = price_element.text.strip()
-            if not current_price:
+            price_text = price_element.text.strip()
+            logging.info(f"Raw price text (update): {price_text}", extra={'product': self.product.title, 'link': self.link})
+            price_clean = re.sub(r'[^\d.]', '', price_text)
+            price = float(price_clean) if price_clean else None
+            if not price:
                 logging.warning(f"No price found.", extra={'product': self.product.title, 'link': self.link})
                 return None
-            return current_price
+            return price
         except TimeoutException:
             logging.error(f"Timeout while fetching price.", extra={'product': self.product.title, 'link': self.link})
             raise
@@ -174,6 +194,7 @@ class ProductPriceUpdater:
         current_price = self.fetch_current_price()
         prev_price = self.product.price
         if not current_price:
+            logging.info(f"No price change (no valid price found).", extra={'product': self.product.title, 'link': self.link})
             return None
         
         if current_price and prev_price == current_price:
@@ -192,7 +213,7 @@ class ProductSaver:
     def save_to_json(self, products):
         data = [p.to_dict() for p in products]
         try:
-            file_path = os.path.join("..", "data_files", self.filename + '.gz')
+            file_path = os.path.join("data_files", self.filename + '.gz')
             if not os.path.exists(os.path.dirname(file_path)):
                 os.makedirs(os.path.dirname(file_path))
             with gzip.open(file_path, "wt", encoding="utf-8") as f:
@@ -206,6 +227,9 @@ class ProductSaver:
             new_products = []
             price_histories = []
             for product in products:
+                if product.price is None:
+                    logging.warning(f"Skipping product due to invalid price: {product.title}", extra={'product': product.title, 'link': product.link})
+                    continue
                 existing_product = ScrapedData.query.filter_by(link=product.link).first()
                 if existing_product:
                     if existing_product.current_price != product.price:
@@ -216,6 +240,7 @@ class ProductSaver:
                             )
                         )
                         existing_product.current_price = product.price
+                        existing_product.last_updated = datetime.utcnow()
                 else:
                     new_products.append(
                         ScrapedData(
@@ -230,7 +255,7 @@ class ProductSaver:
                     )
             db.session.add_all(new_products + price_histories)
             db.session.commit()
-            logging.info(f"Saved {len(products)} products to database.", extra={'product': '', 'link': ''})
+            logging.info(f"Saved {len(new_products)} new products and {len(price_histories)} price histories to database.", extra={'product': '', 'link': ''})
         except Exception as e:
             db.session.rollback()
             logging.error(f"Error saving to database: {str(e)}", extra={'product': '', 'link': ''})
@@ -239,12 +264,10 @@ def scrape_from_user_url(url):
     try:
         options = Options()
         options.add_argument("--headless")
-        options.add_argument("--disable-gpu")
-        options.add_argument("--no-sandbox")
         options.add_argument("--disable-notifications")
         options.add_argument("--log-level=3")
-        service = Service(ChromeDriverManager().install())
-        driver = webdriver.Chrome(service=service, options=options)
+        service = Service(GeckoDriverManager().install())
+        driver = webdriver.Firefox(service=service, options=options)
         
         scraper = ProductScraper(url, driver=driver)
         products = scraper.fetch_all_products()
@@ -259,24 +282,26 @@ def scrape_from_user_url(url):
         return {"status": "error", "message": f"Error: {str(e)}"}
 
 def update_product_price():
-    products = ScrapedData.query.all()
-    options = Options()
-    options.add_argument("--headless")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-notifications")
-    options.add_argument("--log-level=3")
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=options)
-    
+    def update_single_product(product):
+        options = Options()
+        options.add_argument("--headless")
+        options.add_argument("--disable-notifications")
+        options.add_argument("--log-level=3")
+        service = Service(GeckoDriverManager().install())
+        driver = webdriver.Firefox(service=service, options=options)
+        try:
+            updater = ProductPriceUpdater(product, driver=driver)
+            updater.update_product_price()
+        finally:
+            driver.quit()
+
     try:
+        products = ScrapedData.query.all()
         with ThreadPoolExecutor(max_workers=5) as executor:
-            futures = [executor.submit(ProductPriceUpdater(product, driver=driver).update_product_price) for product in products]
+            futures = [executor.submit(update_single_product, product) for product in products]
             for future in futures:
                 future.result()
         db.session.commit()
     except Exception as e:
         db.session.rollback()
         logging.error(f"Error during price update: {str(e)}", extra={'product': '', 'link': ''})
-    finally:
-        driver.quit()
