@@ -27,7 +27,7 @@ class PriceHistory(db.Model):
     def __repr__(self):
         return f"<PriceHistory {self.price} at {self.timestamp}>"
 
-def clean_old_data(threshold_days=30):
-    threshold = datetime.utcnow() - timedelta(days=threshold_days)
+def clean_old_data(threshold_seconds=1):
+    threshold = datetime.utcnow() - timedelta(seconds=threshold_seconds)
     ScrapedData.query.filter(ScrapedData.last_updated < threshold).delete()
     db.session.commit()

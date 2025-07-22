@@ -36,6 +36,16 @@ def home():
     
     return render_template('index.html', products=products, brands=brands, search=search, brand=brand, per_page=per_page)
 
+@views_bp.route('/toggle_view', methods=['POST'])
+def toggle_view():
+    toggle_view = request.form.get('toggleView', 'disabled')
+    if toggle_view == 'enabled':
+        toggle_view = 'disabled'
+    else:
+        toggle_view = 'enabled'
+    
+    return redirect(url_for('views.home', toggleView=toggle_view))
+
 @views_bp.route('/product/<int:id>')
 def product_detail(id):
     product = ScrapedData.query.get_or_404(id)

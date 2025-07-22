@@ -38,7 +38,7 @@ def create_app():
         scheduler = BackgroundScheduler()
         from .scraper import update_product_price
         def safe_update_product_price():
-            with app.app_context():  # Add application context
+            with app.app_context():
                 try:
                     update_product_price()
                     logging.info("Price update completed successfully.", extra={'product': '', 'link': ''})

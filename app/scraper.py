@@ -1,22 +1,15 @@
 import json
-import time
 import os
 import logging
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.firefox.service import Service
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException, TimeoutException
-from webdriver_manager.firefox import GeckoDriverManager
+import requests
+from urllib.parse import urljoin
+from bs4 import BeautifulSoup
+import re
 from .database import ScrapedData, PriceHistory
 from . import db
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 from tenacity import retry, stop_after_attempt, wait_fixed
-import gzip
-import re
 
 # Configure logging
 logging.basicConfig(
@@ -25,11 +18,6 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s - [Product: %(product)s, Link: %(link)s]",
     encoding="utf-8"
 )
-
-# Initialize global driver (used as fallback)
-driver_path = GeckoDriverManager().install()
-service = Service(driver_path)
-driver = webdriver.Firefox(service=service)
 
 class Product:
     def __init__(self, title, price, link, image, brand, product_code, prev_price=None):
@@ -53,154 +41,152 @@ class Product:
         }
 
 class ProductScraper:
-    def __init__(self, start_url, driver=None):
+    def __init__(self, start_url):
         self.start_url = start_url
-        if driver is None:
-            options = Options()
-            options.add_argument("--headless")
-            options.add_argument("--disable-notifications")
-            options.add_argument("--log-level=3")
-            service = Service(GeckoDriverManager().install())
-            self.driver = webdriver.Firefox(service=service, options=options)
-        else:
-            self.driver = driver
-        self.wait = WebDriverWait(self.driver, 10)
+        self.base_url = start_url.split('?')[0]
+        self.headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
         self.seen_links = set()
 
     def fetch_all_products(self):
         all_products = []
-        self.driver.get(self.start_url)
+        url = self.start_url
         page = 1
 
         while True:
-            logging.info(f"Scraping page {page}...", extra={'product': '', 'link': ''})
-            products = self._extract_products_from_page()
+            logging.info(f"Scraping page {page}...", extra={'product': '', 'link': url})
+            try:
+                response = requests.get(url, headers=self.headers, timeout=10)
+                response.raise_for_status()
+            except requests.RequestException as e:
+                logging.error(f"Failed to load page {page}: {str(e)}", extra={'product': '', 'link': url})
+                break
+
+            soup = BeautifulSoup(response.text, "html.parser")
+            products = self._extract_products_from_soup(soup)
             if not products:
-                logging.info("No products found on this page, stopping.", extra={'product': '', 'link': ''})
+                logging.info("No products found on this page, stopping.", extra={'product': '', 'link': url})
                 break
             all_products.extend(products)
-            logging.info(f"Found {len(products)} products on page {page}.", extra={'product': '', 'link': ''})
+            logging.info(f"Found {len(products)} products on page {page}.", extra={'product': '', 'link': url})
+
+            current_page_el = soup.select_one(".pagination .current")
+            if not current_page_el:
+                logging.info("No current page element found, stopping.", extra={'product': '', 'link': url})
+                break
 
             try:
-                pagination = self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, "pagination")))
-                next_page_button = None
-                pages = pagination.find_elements(By.TAG_NAME, "li")
-                
-                for li in pages:
-                    try:
-                        a = li.find_element(By.TAG_NAME, "a")
-                        if a.text.strip() == str(page + 1):
-                            next_page_button = a
-                            break
-                    except NoSuchElementException:
-                        continue
-
-                if next_page_button:
-                    self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", next_page_button)
-                    time.sleep(1)
-                    self.wait.until(EC.element_to_be_clickable(next_page_button)).click()
-                    page += 1
-                    time.sleep(2)
-                else:
-                    logging.info("No next page found, stopping.", extra={'product': '', 'link': ''})
-                    break
-            except (TimeoutException, ElementClickInterceptedException, NoSuchElementException) as e:
-                logging.error(f"Error navigating pagination: {str(e)}", extra={'product': '', 'link': ''})
+                current_page = int(current_page_el.get_text(strip=True))
+            except ValueError:
+                logging.error("Invalid current page number, stopping.", extra={'product': '', 'link': url})
                 break
+
+            pagination_links = soup.select(".pagination a")
+            next_page_url = None
+            for link in pagination_links:
+                try:
+                    page_num = int(link.get_text(strip=True))
+                    if page_num == current_page + 1:
+                        next_page_url = link.get("href")
+                        break
+                except ValueError:
+                    continue
+
+            if not next_page_url:
+                logging.info("No next page link found, stopping.", extra={'product': '', 'link': url})
+                break
+
+            next_page_url = urljoin(url, next_page_url)
+            url = next_page_url
+            page += 1
 
         return all_products
 
-    def _extract_products_from_page(self):
+    def _extract_products_from_soup(self, soup):
         products = []
-        try:
-            product_elements = self.wait.until(
-                EC.presence_of_all_elements_located((By.CLASS_NAME, "product-item-holder"))
-            )
-            for el in product_elements:
-                try:
-                    title_el = el.find_element(By.CLASS_NAME, "title").find_element(By.TAG_NAME, "a")
-                    title = title_el.text.strip() or "Unknown"
-                    link = title_el.get_attribute("href")
-                    
-                    if link in self.seen_links:
-                        continue
-                    self.seen_links.add(link)
-
-                    image_el = el.find_element(By.CLASS_NAME, "image").find_element(By.TAG_NAME, "img")
-                    image = image_el.get_attribute("src") or "/static/images/no-image.jpg"
-                    
-                    # Handle price extraction with validation
-                    try:
-                        price_text = el.find_element(By.CLASS_NAME, "price-current").text.strip()
-                        logging.info(f"Raw price text: {price_text}", extra={'product': title, 'link': link})
-                        price_clean = re.sub(r'[^\d.]', '', price_text)
-                        price = float(price_clean) if price_clean else None
-                    except (NoSuchElementException, ValueError):
-                        logging.warning(f"Invalid or missing price for product: {title}", extra={'product': title, 'link': link})
-                        price = None
-                    
-                    brand_el = el.find_element(By.CLASS_NAME, "brand")
-                    brand_text = brand_el.text.split()
-                    brand = brand_text[0] if brand_text else "Unknown"
-                    product_code = brand_el.find_element(By.TAG_NAME, "span").text.strip() if brand_el.find_elements(By.TAG_NAME, "span") else "-"
-                    
-                    if price is not None:
-                        products.append(Product(title, price, link, image, brand, product_code))
-                    else:
-                        logging.warning(f"Skipping product due to invalid price.", extra={'product': title, 'link': link})
-                except NoSuchElementException:
-                    logging.warning(f"Skipping product due to missing elements.", extra={'product': title if 'title' in locals() else '', 'link': link if 'link' in locals() else ''})
+        product_elements = soup.select(".product-item-holder")
+        for el in product_elements:
+            try:
+                title_el = el.select_one(".title a")
+                if not title_el:
                     continue
-        except TimeoutException:
-            logging.error("Failed to load products on this page.", extra={'product': '', 'link': ''})
+                title = title_el.get_text(strip=True) or "Unknown"
+                link = title_el.get("href")
+                if not link:
+                    logging.warning(f"Skipping product due to missing link.", extra={'product': title, 'link': ''})
+                    continue
+                link = urljoin("https://www.dmo.gov.tr/", link)  
+
+                if link in self.seen_links:
+                    continue
+                self.seen_links.add(link)
+
+                image_el = el.select_one(".image img")
+                image = image_el.get("src") if image_el else "/static/images/no-image.jpg"
+                image = urljoin("https://www.dmo.gov.tr/", image)  # Resolve relative image URL
+
+                price_el = el.select_one(".price-current")
+                price_text = price_el.get_text(strip=True) if price_el else None
+                price_normalized = price_text.replace(".", "").replace(",", ".") if price_text else ""
+                price_clean = re.sub(r"[^\d.]", "", price_normalized)
+                price = float(price_clean) if price_clean else None
+
+                brand_el = el.select_one(".brand")
+                brand_parts = brand_el.get_text(strip=True).split() if brand_el else []
+                brand = brand_parts[0] if brand_parts else "Unknown"
+                product_code = brand_el.select_one("span").get_text(strip=True) if brand_el and brand_el.select_one("span") else "-"
+
+                if price is not None:
+                    products.append(Product(title, price, link, image, brand, product_code))
+                else:
+                    logging.warning(f"Skipping product due to invalid price.", extra={'product': title, 'link': link})
+            except Exception as e:
+                logging.warning(f"Error parsing product: {str(e)}", extra={'product': title if 'title' in locals() else '', 'link': link if 'link' in locals() else ''})
+                continue
         return products
 
 class ProductPriceUpdater:
-    def __init__(self, product, driver=None):
+    def __init__(self, product):
         self.product = product
         self.previous_price = product.price
-        if driver is None:
-            options = Options()
-            options.add_argument("--headless")
-            options.add_argument("--disable-notifications")
-            options.add_argument("--log-level=3")
-            service = Service(GeckoDriverManager().install())
-            self.driver = webdriver.Firefox(service=service, options=options)
-        else:
-            self.driver = driver
-        self.link = self.product.link
-        self.wait = WebDriverWait(self.driver, 10)
+        self.link = product.link
+        self.headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
     def fetch_current_price(self):
         try:
-            self.driver.get(self.link)
-            price_element = self.wait.until(
-                EC.presence_of_element_located((By.CLASS_NAME, "price-prev"))
-            )
-            price_text = price_element.text.strip()
+            response = requests.get(self.link, headers=self.headers, timeout=10)
+            response.raise_for_status()
+            soup = BeautifulSoup(response.text, "html.parser")
+            price_element = soup.select_one(".price-current")
+            price_text = price_element.get_text(strip=True) if price_element else None
             logging.info(f"Raw price text (update): {price_text}", extra={'product': self.product.title, 'link': self.link})
-            price_clean = re.sub(r'[^\d.]', '', price_text)
-            price = float(price_clean) if price_clean else None
-            if not price:
+
+            if not price_text:
                 logging.warning(f"No price found.", extra={'product': self.product.title, 'link': self.link})
                 return None
+            price_normalized = price_text.replace(".", "").replace(",", ".") if price_text else ""
+            price_clean = re.sub(r"[^\d.]", "", price_normalized)
+            price = float(price_clean) if price_clean else None
             return price
-        except TimeoutException:
-            logging.error(f"Timeout while fetching price.", extra={'product': self.product.title, 'link': self.link})
+        except requests.RequestException as e:
+            logging.error(f"Error fetching price: {str(e)}", extra={'product': self.product.title, 'link': self.link})
             raise
 
     def update_product_price(self):
         current_price = self.fetch_current_price()
         prev_price = self.product.price
-        if not current_price:
+        if current_price is None:
             logging.info(f"No price change (no valid price found).", extra={'product': self.product.title, 'link': self.link})
             return None
-        
-        if current_price and prev_price == current_price:
+
+        if prev_price == current_price:
             logging.info(f"No price change.", extra={'product': self.product.title, 'link': self.link})
             return None
-        
+
         self.product.price = current_price
         self.product.prev_price = prev_price
         logging.info(f"Price updated. New price: {current_price}", extra={'product': self.product.title, 'link': self.link})
@@ -213,12 +199,12 @@ class ProductSaver:
     def save_to_json(self, products):
         data = [p.to_dict() for p in products]
         try:
-            file_path = os.path.join("data_files", self.filename + '.gz')
+            file_path = os.path.join("data_files", self.filename)
             if not os.path.exists(os.path.dirname(file_path)):
                 os.makedirs(os.path.dirname(file_path))
-            with gzip.open(file_path, "wt", encoding="utf-8") as f:
+            with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False)
-            logging.info(f"{len(products)} products saved to {self.filename}.gz", extra={'product': '', 'link': ''})
+            logging.info(f"{len(products)} products saved to {self.filename}", extra={'product': '', 'link': ''})
         except Exception as e:
             logging.error(f"Error saving to JSON: {str(e)}", extra={'product': '', 'link': ''})
 
@@ -262,20 +248,11 @@ class ProductSaver:
 
 def scrape_from_user_url(url):
     try:
-        options = Options()
-        options.add_argument("--headless")
-        options.add_argument("--disable-notifications")
-        options.add_argument("--log-level=3")
-        service = Service(GeckoDriverManager().install())
-        driver = webdriver.Firefox(service=service, options=options)
-        
-        scraper = ProductScraper(url, driver=driver)
+        scraper = ProductScraper(url)
         products = scraper.fetch_all_products()
         saver = ProductSaver()
         saver.save_to_json(products)
         saver.save_to_db(products)
-        
-        driver.quit()
         return {"status": "success", "message": f"{len(products)} products scraped and saved successfully."}
     except Exception as e:
         logging.error(f"Error processing URL {url}: {str(e)}", extra={'product': '', 'link': url})
@@ -283,17 +260,22 @@ def scrape_from_user_url(url):
 
 def update_product_price():
     def update_single_product(product):
-        options = Options()
-        options.add_argument("--headless")
-        options.add_argument("--disable-notifications")
-        options.add_argument("--log-level=3")
-        service = Service(GeckoDriverManager().install())
-        driver = webdriver.Firefox(service=service, options=options)
         try:
-            updater = ProductPriceUpdater(product, driver=driver)
-            updater.update_product_price()
-        finally:
-            driver.quit()
+            updater = ProductPriceUpdater(product)
+            updated_price = updater.update_product_price()
+            if updated_price is not None:
+                existing_product = ScrapedData.query.filter_by(link=product.link).first()
+                if existing_product:
+                    if existing_product.current_price != updated_price:
+                        price_history = PriceHistory(
+                            product_id=existing_product.id,
+                            price=existing_product.current_price
+                        )
+                        existing_product.current_price = updated_price
+                        existing_product.last_updated = datetime.utcnow()
+                        db.session.add(price_history)
+        except Exception as e:
+            logging.error(f"Error updating product price: {str(e)}", extra={'product': product.title, 'link': product.link})
 
     try:
         products = ScrapedData.query.all()

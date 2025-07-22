@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container">
     <h1>Ürün Listesi</h1>
-    <div class="row mb-3">
+    <div class="row mb-5">
         <div class="col">
             <form method="GET" action="{{ url_for('views.home') }}">
                 <div class="input-group">
@@ -24,7 +24,7 @@
             </form>
         </div>
     </div>
-    <div class="row mb-3">
+    <div class="row mb-5">
         <div class="col">
             <form method="POST" action="{{ url_for('views.home') }}">
                 <div class="input-group">
@@ -34,6 +34,14 @@
             </form>
         </div>
     </div>
+    <div class="row mb-5">
+        <div class="col">
+            <form method="POST" action="{{ url_for('views.toggle_view') }}">
+                <button type="submit" name="toggleView" value="{{ 'disabled' if toggleView == 'enabled' else 'enabled' }}" class="btn btn-secondary">
+                    {{ 'Liste Görünümü' if toggleView == 'enabled' else 'Kart Görünümü' }}
+                </button>
+            </form>
+        </div>
     <table class="table table-striped">
         <thead>
             <tr>
@@ -43,13 +51,7 @@
                 <th>Fiyat</th>
                 <th>Ürün Kodu</th>
                 <th>Detay</th>
-                <!-- Add table and list view toggle -->
-                <th class="text-center align-middle" style="width: 120px;">
-                    <button class="btn btn-outline-secondary" id="toggleView" type="button" title="Liste/Galeri Görünümü" disabled>
-                        <i class="bi bi-layout-text-window-reverse"></i> Görünüm
-                    </button>
-                </th>
-                
+   
             </tr>
         </thead>
         <tbody>
@@ -57,21 +59,23 @@
                 <!-- Check view option "toggleView"-->
                 {% if toggleView == "disabled" %}
                     <tr>
-                        <td><img src="{{ product.image }}" alt="{{ product.title }}" width="50"></td>
-                        <td>{{ product.title }}</td>
-                        <td>{{ product.brand }}</td>
-                        <td>{{ product.current_price }}</td>
+                        <td><img src="{{ product.image }}" alt="{{ product.title }}" width="10"></td>
+                        <td>{{ product.title  }}</td>
+                        <td>Üretici Firma: {{ product.brand }}</td>
+                        <td>Yeni Fiyat:{{ product.current_price }}</td>
+                        <td>Eski Fiyat:{{ product.prev_price }}</td>
                         <td>{{ product.product_code }}</td>
                         <td><a href="{{ url_for('views.product_detail', id=product.id) }}">Detay</a></td>
                     </tr>
                 {% else %}
-                    <div class="col-6 col-md-4 mb-4">
+                    <div class="col-1 col-md-3 mb-1">
                         <div class="card">
                             <img src="{{ product.image }}" alt="{{ product.title }}" class="card-img-top">
                             <div class="card-body">
                                 <h5 class="card-title">{{ product.title }}</h5>
                                 <p class="card-text">{{ product.brand }}</p>
                                 <p class="card-text">{{ product.current_price }}</p>
+                                <p>Eski Fiyat:{{ product.prev_price }}</p>
                                 <p class="card-text">{{ product.product_code }}</p>
                                 <a href="{{ url_for('views.product_detail', id=product.id) }}" class="btn btn-primary">Detay</a>
                             </div>
