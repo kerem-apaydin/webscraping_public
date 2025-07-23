@@ -1,0 +1,60 @@
+Adding job tentatively -- it will be properly scheduled when the scheduler starts
+Added job "create_app.<locals>.safe_update_product_price" to job store "default"
+Scheduler started
+Running job "create_app.<locals>.safe_update_product_price (trigger: interval[1 day, 0:00:00], next run at: 2025-07-24 09:41:59 +03)" (scheduled at 2025-07-23 09:41:59.208748+03:00)
+Error during price update: update_product_price() missing 1 required positional argument: 'product'
+Job "create_app.<locals>.safe_update_product_price (trigger: interval[1 day, 0:00:00], next run at: 2025-07-24 09:41:59 +03)" executed successfully
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+[33mPress CTRL+C to quit[0m
+ * Restarting with stat
+Adding job tentatively -- it will be properly scheduled when the scheduler starts
+Added job "create_app.<locals>.safe_update_product_price" to job store "default"
+Scheduler started
+Running job "create_app.<locals>.safe_update_product_price (trigger: interval[1 day, 0:00:00], next run at: 2025-07-24 09:42:00 +03)" (scheduled at 2025-07-23 09:42:00.368501+03:00)
+Error during price update: update_product_price() missing 1 required positional argument: 'product'
+Job "create_app.<locals>.safe_update_product_price (trigger: interval[1 day, 0:00:00], next run at: 2025-07-24 09:42:00 +03)" executed successfully
+ * Debugger is active!
+ * Debugger PIN: 726-876-880
+127.0.0.1 - - [23/Jul/2025 09:42:08] "[35m[1mGET / HTTP/1.1[0m" 500 -
+127.0.0.1 - - [23/Jul/2025 09:42:08] "GET /?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 200 -
+127.0.0.1 - - [23/Jul/2025 09:42:08] "GET /?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 200 -
+127.0.0.1 - - [23/Jul/2025 09:42:08] "GET /?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+127.0.0.1 - - [23/Jul/2025 09:42:08] "GET /?__debugger__=yes&cmd=resource&f=console.png&s=pmnDWhjq4UnwvTm4SXtq HTTP/1.1" 200 -
+ * Detected change in 'C:\\Users\\Kerem\\Desktop\\active\\webscraper\\app\\database.py', reloading
+Scheduler has been shut down
+ * Restarting with stat
+Adding job tentatively -- it will be properly scheduled when the scheduler starts
+Added job "create_app.<locals>.safe_update_product_price" to job store "default"
+Scheduler started
+Running job "create_app.<locals>.safe_update_product_price (trigger: interval[1 day, 0:00:00], next run at: 2025-07-24 09:43:29 +03)" (scheduled at 2025-07-23 09:43:29.313938+03:00)
+Error during price update: update_product_price() missing 1 required positional argument: 'product'
+Job "create_app.<locals>.safe_update_product_price (trigger: interval[1 day, 0:00:00], next run at: 2025-07-24 09:43:29 +03)" executed successfully
+ * Debugger is active!
+ * Debugger PIN: 726-876-880
+127.0.0.1 - - [23/Jul/2025 09:43:31] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [23/Jul/2025 09:43:31] "[33mGET /Files/urunResim/aramaprofil/1024149.jpg HTTP/1.1[0m" 404 -
+127.0.0.1 - - [23/Jul/2025 09:43:31] "[33mGET /Files/urunResim/aramaprofil/1171046.jpg HTTP/1.1[0m" 404 -
+127.0.0.1 - - [23/Jul/2025 09:43:31] "[33mGET /Files/urunResim/aramaprofil/1171045.jpg HTTP/1.1[0m" 404 -
+127.0.0.1 - - [23/Jul/2025 09:43:31] "[33mGET /Files/urunResim/aramaprofil/1171048.jpg HTTP/1.1[0m" 404 -
+127.0.0.1 - - [23/Jul/2025 09:43:31] "[33mGET /Files/urunResim/aramaprofil/1171047.jpg HTTP/1.1[0m" 404 -
+127.0.0.1 - - [23/Jul/2025 09:43:31] "[33mGET /Files/urunResim/aramaprofil/1171049.jpg HTTP/1.1[0m" 404 -
+127.0.0.1 - - [23/Jul/2025 09:43:31] "[33mGET /Files/urunResim/aramaprofil/1171050.jpg HTTP/1.1[0m" 404 -
+127.0.0.1 - - [23/Jul/2025 09:43:31] "[33mGET /Files/urunResim/aramaprofil/1216404.jpg HTTP/1.1[0m" 404 -
+127.0.0.1 - - [23/Jul/2025 09:43:31] "[33mGET /Files/urunResim/aramaprofil/1216417.jpg HTTP/1.1[0m" 404 -
+127.0.0.1 - - [23/Jul/2025 09:43:31] "[33mGET /Files/urunResim/aramaprofil/1216418.jpg HTTP/1.1[0m" 404 -
+127.0.0.1 - - [23/Jul/2025 09:43:31] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+127.0.0.1 - - [23/Jul/2025 09:44:01] "GET /product/10 HTTP/1.1" 200 -
+127.0.0.1 - - [23/Jul/2025 09:44:01] "[33mGET /Files/urunResim/aramaprofil/1216418.jpg HTTP/1.1[0m" 404 -
+127.0.0.1 - - [23/Jul/2025 09:44:06] "[33mGET /Katalog/Urun/Detay/3394616_1216418 HTTP/1.1[0m" 404 -
+ * Detected change in 'C:\\Users\\Kerem\\Desktop\\active\\webscraper\\run.py', reloading
+Scheduler has been shut down
+ * Restarting with stat
+Adding job tentatively -- it will be properly scheduled when the scheduler starts
+Added job "create_app.<locals>.safe_update_product_price" to job store "default"
+Scheduler started
+Running job "create_app.<locals>.safe_update_product_price (trigger: interval[1 day, 0:00:00], next run at: 2025-07-24 09:51:54 +03)" (scheduled at 2025-07-23 09:51:54.433508+03:00)
+Error during price update: update_product_price() missing 1 required positional argument: 'product'
+Job "create_app.<locals>.safe_update_product_price (trigger: interval[1 day, 0:00:00], next run at: 2025-07-24 09:51:54 +03)" executed successfully
+Scheduler has been shut down
+Scheduler has been shut down

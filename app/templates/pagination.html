@@ -1,25 +1,15 @@
-<div class="container mt-3">
-    <nav aria-label="Page navigation">
-        <ul class="pagination">
-            {% if products.has_prev %}
-                <li class="page-item">
-                    <a class="page-link" href="{{ url_for('views.home', page=products.prev_num, search=search, brand=brand, per_page=per_page) }}">Önceki</a>
-                </li>
-            {% endif %}
-            {% for page_num in products.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=3) %}
-                {% if page_num %}
-                    <li class="page-item {% if page_num == products.page %}active{% endif %}">
-                        <a class="page-link" href="{{ url_for('views.home', page=page_num, search=search, brand=brand, per_page=per_page) }}">{{ page_num }}</a>
-                    </li>
-                {% else %}
-                    <li class="page-item disabled"><span class="page-link">...</span></li>
-                {% endif %}
-            {% endfor %}
-            {% if products.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="{{ url_for('views.home', page=products.next_num, search=search, brand=brand, per_page=per_page) }}">Sonraki</a>
-                </li>
-            {% endif %}
-        </ul>
-    </nav>
+<div class="pagination">
+    {% if products.has_prev %}
+        <a href="{{ url_for('views.home', page=products.prev_num, search=search, brand=brand, per_page=per_page, toggleView=toggle_view) }}">Önceki</a>
+    {% endif %}
+    {% for page_num in products.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=3) %}
+        {% if page_num %}
+            <a href="{{ url_for('views.home', page=page_num, search=search, brand=brand, per_page=per_page, toggleView=toggle_view) }}" {% if page_num == products.page %}class="current"{% endif %}>{{ page_num }}</a>
+        {% else %}
+            <span>...</span>
+        {% endif %}
+    {% endfor %}
+    {% if products.has_next %}
+        <a href="{{ url_for('views.home', page=products.next_num, search=search, brand=brand, per_page=per_page, toggleView=toggle_view) }}">Sonraki</a>
+    {% endif %}
 </div>

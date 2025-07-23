@@ -1,0 +1,10 @@
+.alert-container { margin: 20px; }
+.alert { padding: 10px; border: 1px solid; }
+.alert-success { background-color: #d4edda; color: #155724; }
+.alert-danger { background-color: #f8d7da; color: #721c24; }
+.card { border: 1px solid #ddd; padding: 10px; margin: 10px; }
+.pagination a { margin: 0 5px; }
+.pagination .current { font-weight: bold; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+img { max-width: 100%; height: auto; }

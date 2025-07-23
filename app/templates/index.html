@@ -1,90 +1,73 @@
 {% extends "base.html" %}
 {% block title %}Ürün Listesi{% endblock %}
 {% block content %}
-<div class="container">
     <h1>Ürün Listesi</h1>
-    <div class="row mb-5">
-        <div class="col">
-            <form method="GET" action="{{ url_for('views.home') }}">
-                <div class="input-group">
-                    <select name="brand" class="form-select">
-                        <option value="">Tüm Ürünler</option>
-                        {% for b in brands %}
-                            <option value="{{ b }}" {% if b == brand %}selected{% endif %}>{{ b }}</option>
-                        {% endfor %}
-                    </select>
-                    <input type="text" name="search" class="form-control" value="{{ search }}" placeholder="Ürün ara...">
-                    <select name="per_page" class="form-select">
-                        <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
-                        <option value="20" {% if per_page == 20 %}selected{% endif %}>20</option>
-                        <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
-                    </select>
-                    <button type="submit" class="btn btn-primary">Filtrele</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    <div class="row mb-5">
-        <div class="col">
-            <form method="POST" action="{{ url_for('views.home') }}">
-                <div class="input-group">
-                    <input type="text" name="scrape_url" class="form-control" placeholder="Ürün URL'si girin">
-                    <button type="submit" class="btn btn-success">Ürünleri Çek</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    <div class="row mb-5">
-        <div class="col">
-            <form method="POST" action="{{ url_for('views.toggle_view') }}">
-                <button type="submit" name="toggleView" value="{{ 'disabled' if toggleView == 'enabled' else 'enabled' }}" class="btn btn-secondary">
-                    {{ 'Liste Görünümü' if toggleView == 'enabled' else 'Kart Görünümü' }}
-                </button>
-            </form>
-        </div>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Resim</th>
-                <th>Başlık</th>
-                <th>Marka</th>
-                <th>Fiyat</th>
-                <th>Ürün Kodu</th>
-                <th>Detay</th>
-   
-            </tr>
-        </thead>
-        <tbody>
-            {% for product in products.items %}
-                <!-- Check view option "toggleView"-->
-                {% if toggleView == "disabled" %}
-                    <tr>
-                        <td><img src="{{ product.image }}" alt="{{ product.title }}" width="10"></td>
-                        <td>{{ product.title  }}</td>
-                        <td>Üretici Firma: {{ product.brand }}</td>
-                        <td>Yeni Fiyat:{{ product.current_price }}</td>
-                        <td>Eski Fiyat:{{ product.prev_price }}</td>
-                        <td>{{ product.product_code }}</td>
-                        <td><a href="{{ url_for('views.product_detail', id=product.id) }}">Detay</a></td>
-                    </tr>
-                {% else %}
-                    <div class="col-1 col-md-3 mb-1">
+
+    <form method="POST" action="{{ url_for('views.home') }}">
+        <input type="text" name="scrape_url" placeholder="Ürün URL'si girin">
+        <button type="submit">Ürünleri Çek</button>
+    </form>
+
+    <form method="GET" action="{{ url_for('views.home') }}">
+        <select name="brand">
+            <option value="">Tüm Markalar</option>
+            {% for b in brands %}
+                <option value="{{ b }}" {% if b == brand %}selected{% endif %}>{{ b }}</option>
+            {% endfor %}
+        </select>
+        <input type="text" name="search" value="{{ search }}" placeholder="Ara...">
+        <select name="per_page" onchange="this.form.submit()">
+            <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+            <option value="20" {% if per_page == 20 %}selected{% endif %}>20</option>
+            <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+        </select>
+        <button type="submit">Filtrele</button>
+    </form>
+
+    <form method="POST" action="{{ url_for('views.toggle_view') }}">
+        <input type="hidden" name="toggleView" value="{{ toggle_view }}">
+        <button type="submit">{{ 'Liste Görünümü' if toggle_view == 'enabled' else 'Kart Görünümü' }}</button>
+    </form>
+
+    <table>
+        <tr>
+            <th>Resim</th>
+            <th>Başlık</th>
+            <th>Marka</th>
+            <th>Fiyat</th>
+            <th>Ürün Kodu</th>
+            <th>Detay</th>
+        </tr>
+        {% for product in products.items %}
+            {% if toggle_view == "disabled" %}
+                <tr>
+                    <td><img src="{{ product.image }}" alt="{{ product.title }}" style="max-width: 100px;"></td>
+                    <td>{{ product.title }}</td>
+                    <td>Üretici Firma: {{ product.brand }}</td>
+                    <td>Yeni Fiyat: {{ product.current_price }}</td>
+                    <td>Eski Fiyat: {{ product.prev_price }}</td>
+                    <td>{{ product.product_code }}</td>
+                    <td><a href="{{ url_for('views.product_detail', id=product.id) }}">Detay</a></td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td>
                         <div class="card">
-                            <img src="{{ product.image }}" alt="{{ product.title }}" class="card-img-top">
-                            <div class="card-body">
-                                <h5 class="card-title">{{ product.title }}</h5>
-                                <p class="card-text">{{ product.brand }}</p>
-                                <p class="card-text">{{ product.current_price }}</p>
-                                <p>Eski Fiyat:{{ product.prev_price }}</p>
-                                <p class="card-text">{{ product.product_code }}</p>
-                                <a href="{{ url_for('views.product_detail', id=product.id) }}" class="btn btn-primary">Detay</a>
+                            <img src="{{ product.image }}" alt="{{ product.title }}" style="max-width: 200px;">
+                            <div>
+                                <h3>{{ product.title }}</h3>
+                                <p>{{ product.brand }}</p>
+                                <p>{{ product.current_price }}</p>
+                                <p>Eski Fiyat: {{ product.prev_price }}</p>
+                                <p>{{ product.product_code }}</p>
+                                <a href="{{ url_for('views.product_detail', id=product.id) }}">Detay</a>
                             </div>
                         </div>
-                    </div>
-                {% endif %}
-            {% endfor %}
-        </tbody>
+                    </td>
+                </tr>
+            {% endif %}
+        {% endfor %}
     </table>
+
     {% include 'pagination.html' %}
-</div>
 {% endblock %}
